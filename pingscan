@@ -11,48 +11,51 @@ usage() {
   echo "$0 10.0-10.0-255.0-255"                                                         >&2
   echo                                                                                  >&2
   echo "would scan all IP addresses from 10.0.0.0 to 10.10.255.255."                    >&2
-  exit $1
+  exit "$1"
 }
 
 parse() {
-  eval $(
-    first_octet_range=$(echo $1 | cut -d. -f1)
-    second_octet_range=$(echo $1 | cut -d. -f2)
-    third_octet_range=$(echo $1 | cut -d. -f3)
-    fourth_octet_range=$(echo $1 | cut -d. -f4)
-    echo "export $2=$(echo ${first_octet_range} | cut -d- -f1)"
-    echo "export $3=$(echo ${first_octet_range} | cut -d- -f2)"
-    echo "export $4=$(echo ${second_octet_range} | cut -d- -f1)"
-    echo "export $5=$(echo ${second_octet_range} | cut -d- -f2)"
-    echo "export $6=$(echo ${third_octet_range} | cut -d- -f1)"
-    echo "export $7=$(echo ${third_octet_range} | cut -d- -f2)"
-    echo "export $8=$(echo ${fourth_octet_range} | cut -d- -f1)"
-    echo "export $9=$(echo ${fourth_octet_range} | cut -d- -f2)"
-  )
+  eval "$(
+    first_octet_range="$(echo "$1" | cut -d. -f1)"
+    second_octet_range="$(echo "$1" | cut -d. -f2)"
+    third_octet_range="$(echo "$1" | cut -d. -f3)"
+    fourth_octet_range="$(echo "$1" | cut -d. -f4)"
+    echo "export $2=$(echo "${first_octet_range}" | cut -d- -f1)"
+    echo "export $3=$(echo "${first_octet_range}" | cut -d- -f2)"
+    echo "export $4=$(echo "${second_octet_range}" | cut -d- -f1)"
+    echo "export $5=$(echo "${second_octet_range}" | cut -d- -f2)"
+    echo "export $6=$(echo "${third_octet_range}" | cut -d- -f1)"
+    echo "export $7=$(echo "${third_octet_range}" | cut -d- -f2)"
+    echo "export $8=$(echo "${fourth_octet_range}" | cut -d- -f1)"
+    echo "export $9=$(echo "${fourth_octet_range}" | cut -d- -f2)"
+  )"
   for var in 2 3 4 5 6 7 8 9
   do
-    eval $(
-      eval "innervar=\$$var"
-      eval "value=\$$innervar"
+    eval "$(
+      innervar=$(eval echo "\$$var")
+      value=$(eval echo "\$$innervar")
       case $value
       in
         (*[!0-9]*|'') echo usage 3 ;;
-        (*)           if [ $value -lt 0 ] || [ $value -gt 255 ]
+        (*)           if [ "${value}" -lt 0 ] || [ "${value}" -gt 255 ]
                       then
                         echo usage 2
                       fi ;;
       esac
-    )
+    )"
   done
 }
 
-if [ $# -ne 1 ]
+if [ "$#" -ne 1 ]
 then
   usage 1
 fi
 
-parse $1 ABEGIN AEND BBEGIN BEND CBEGIN CEND DBEGIN DEND
-if [ $ABEGIN -gt $AEND ] || [ $BBEGIN -gt $BEND ] || [ $CBEGIN -gt $CEND ] || [ $DBEGIN -gt $DEND ]
+parse "$1" ABEGIN AEND BBEGIN BEND CBEGIN CEND DBEGIN DEND
+if  [ "${ABEGIN}" -gt "${AEND}" ] || \
+    [ "${BBEGIN}" -gt "${BEND}" ] || \
+    [ "${CBEGIN}" -gt "${CEND}" ] || \
+    [ "${DBEGIN}" -gt "${DEND}" ]
 then
   usage 4
 fi
@@ -66,20 +69,20 @@ fi
 # echo "\$DBEGIN	=	$DBEGIN"
 # echo "\$DEND  	=	$DEND"
 
-i=$ABEGIN
-while [ $i -le $AEND ]
+i="${ABEGIN}"
+while [ "$i" -le "${AEND}" ]
 do
-  j=$BBEGIN
-  while [ $j -le $BEND ]
+  j="${BBEGIN}"
+  while [ "$j" -le "${BEND}" ]
   do
-    k=$CBEGIN
-    while [ $k -le $CEND ]
+    k="${CBEGIN}"
+    while [ "$k" -le "${CEND}" ]
     do
-      l=$DBEGIN
-      while [ $l -le $DEND ]
+      l="${DBEGIN}"
+      while [ "$l" -le "${DEND}" ]
       do
         IP="$i.$j.$k.$l"
-        if [ ${#IP} -le 7 ]
+        if [ "${#IP}" -le 7 ]
         then
           PAD="	"
         else
@@ -88,7 +91,7 @@ do
 
         if ping -c 1 -W 0.01 "${IP}" 1>/dev/null 2>/dev/null
         then
-          echo "${IP}	    present	${PAD}$(nslookup ${IP} | \
+          echo "${IP}	    present	${PAD}$(nslookup "${IP}" | \
             sed -e '/can.t find/s/^\*\* server can.t find //' \
                 -e '/:/s/: /	nerr = /')"
         else
