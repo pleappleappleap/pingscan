@@ -69,19 +69,25 @@ fi
 # echo "\$DBEGIN	=	$DBEGIN"
 # echo "\$DEND  	=	$DEND"
 
-i="${ABEGIN}"
-while [ "$i" -le "${AEND}" ]
+ABCCMD="for(i=${ABEGIN};i<=${AEND};i+=1) i"
+BBCCMD="for(i=${BBEGIN};i<=${BEND};i+=1) i"
+CBCCMD="for(i=${CBEGIN};i<=${CEND};i+=1) i"
+DBCCMD="for(i=${DBEGIN};i<=${DEND};i+=1) i"
+
+ALIST=$(echo "${ABCCMD}" | bc)
+BLIST=$(echo "${BBCCMD}" | bc)
+CLIST=$(echo "${CBCCMD}" | bc)
+DLIST=$(echo "${DBCCMD}" | bc)
+
+for A in $ALIST
 do
-  j="${BBEGIN}"
-  while [ "$j" -le "${BEND}" ]
+  for B in $BLIST
   do
-    k="${CBEGIN}"
-    while [ "$k" -le "${CEND}" ]
+    for C in $CLIST
     do
-      l="${DBEGIN}"
-      while [ "$l" -le "${DEND}" ]
+      for D in $DLIST
       do
-        IP="$i.$j.$k.$l"
+        IP="$A.$B.$C.$D"
         if [ "${#IP}" -le 7 ]
         then
           PAD="	"
@@ -93,18 +99,12 @@ do
         then
           echo "${IP}	    present	${PAD}$(nslookup "${IP}" | \
             sed -e '/can.t find/s/^\*\* server can.t find //' \
-                -e '/:/s/: /	nerr = /')"
+                -e '/:/s/: /	nerr = /' \
+                -e 's/^[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*\.in-addr\.arpa	//g')"
         else
           echo "${IP}	${PAD}not present"
         fi
-
-        l="$(( l + 1 ))"
       done
-      k="$(( k + 1 ))"
     done
-    j="$(( j + 1 ))"
   done
-  i="$(( i + 1 ))"
 done
-
-wait
