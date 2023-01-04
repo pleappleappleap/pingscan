@@ -32,9 +32,9 @@ parse() {
   for var in 2 3 4 5 6 7 8 9
   do
     eval "$(
-      innervar=$(eval echo "\$$var")
-      value=$(eval echo "\$$innervar")
-      case $value
+      innervar=$(eval echo "\$${var}")
+      value=$(eval echo "\$${innervar}")
+      case ${value}
       in
         (*[!0-9]*|'') echo usage 3 ;;
         (*)           if [ "${value}" -lt 0 ] || [ "${value}" -gt 255 ]
@@ -79,15 +79,15 @@ BLIST=$(echo "${BBCCMD}" | bc)
 CLIST=$(echo "${CBCCMD}" | bc)
 DLIST=$(echo "${DBCCMD}" | bc)
 
-for A in $ALIST
+for A in ${ALIST}
 do
-  for B in $BLIST
+  for B in ${BLIST}
   do
-    for C in $CLIST
+    for C in ${CLIST}
     do
-      for D in $DLIST
+      for D in ${DLIST}
       do
-        IP="$A.$B.$C.$D"
+        IP="${A}.${B}.${C}.${D}"
         if [ "${#IP}" -le 7 ]
         then
           PAD="	"
